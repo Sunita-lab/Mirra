@@ -40,3 +40,30 @@ df["content"] = df["title"] + " " + df["text"]
 
 print("\nSample Content:")
 print(df["content"].iloc[0][:500])
+
+from sklearn.model_selection import train_test_split
+X = df["content"]
+y = df["label"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.2,
+    random_state=42,
+    stratify=y
+)
+
+print("Train Size:", len(X_train))
+print("Test Size:", len(X_test))
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+vectorizer = TfidfVectorizer(
+    stop_words="english",
+    max_features=20000
+)
+
+X_train_tfidf = vectorizer.fit_transform(X_train)
+X_test_tfidf = vectorizer.transform(X_test)
+
+print("TF-IDF Train Shape:", X_train_tfidf.shape)
+print("TF-IDF Test Shape:", X_test_tfidf.shape)
