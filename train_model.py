@@ -67,3 +67,18 @@ X_test_tfidf = vectorizer.transform(X_test)
 
 print("TF-IDF Train Shape:", X_train_tfidf.shape)
 print("TF-IDF Test Shape:", X_test_tfidf.shape)
+
+from sklearn.svm import LinearSVC
+from sklearn.metrics import accuracy_score, classification_report
+
+svm_model = LinearSVC()
+svm_model.fit(X_train_tfidf, y_train)
+
+y_pred = svm_model.predict(X_test_tfidf)
+
+accuracy = accuracy_score(y_test, y_pred)
+
+print(f"Accuracy: {accuracy:.4f}")
+
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
