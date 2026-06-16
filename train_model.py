@@ -82,3 +82,19 @@ print(f"Accuracy: {accuracy:.4f}")
 
 print("\nClassification Report:")
 print(classification_report(y_test, y_pred))
+
+sample_text = """
+Scientists have discovered a new renewable energy source that could reduce global emissions by 40 percent over the next decade.
+"""
+
+sample_vector = vectorizer.transform([sample_text])
+
+prediction = svm_model.predict(sample_vector)
+
+print("Prediction:", prediction)
+
+import joblib
+joblib.dump(svm_model, "models/svm_model.pkl")
+joblib.dump(vectorizer, "models/tfidf_vectorizer.pkl")
+
+print("Model saved successfully!")
