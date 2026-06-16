@@ -1,100 +1,114 @@
 import pandas as pd
-
-import os
-
-print(os.path.exists("data/news_dataset/Fake.csv"))
-
-print(os.getcwd())
-print(os.listdir("."))
-print(os.listdir("data"))
-
-fake_df = pd.read_csv("data/news_dataset/Fake.csv")
-true_df = pd.read_csv("data/news_dataset/True.csv")
-
-print("Fake shape:", fake_df.shape)
-print("True shape:", true_df.shape)
-
-print("\nFake columns:")
-print(fake_df.columns)
-
-print("\nTrue columns:")
-print(true_df.columns)
-
-fake_df["label"] = 0
-true_df["label"] = 1
-
-df = pd.concat([fake_df, true_df], ignore_index=True)
-
-print("Merged Shape:", df.shape)
-
-print("\nLabel Distribution:")
-print(df["label"].value_counts())
-
-print("\nMissing Values:")
-print(df.isnull().sum())
-
-df["title"] = df["title"].fillna("")
-df["text"] = df["text"].fillna("")
-
-df["content"] = df["title"] + " " + df["text"]
-
-print("\nSample Content:")
-print(df["content"].iloc[0][:500])
+import joblib
 
 from sklearn.model_selection import train_test_split
-X = df["content"]
-y = df["label"]
-
-X_train, X_test, y_train, y_test = train_test_split(
-    X,
-    y,
-    test_size=0.2,
-    random_state=42,
-    stratify=y
-)
-
-print("Train Size:", len(X_train))
-print("Test Size:", len(X_test))
-
 from sklearn.feature_extraction.text import TfidfVectorizer
-vectorizer = TfidfVectorizer(
-    stop_words="english",
-    max_features=20000
-)
-
-X_train_tfidf = vectorizer.fit_transform(X_train)
-X_test_tfidf = vectorizer.transform(X_test)
-
-print("TF-IDF Train Shape:", X_train_tfidf.shape)
-print("TF-IDF Test Shape:", X_test_tfidf.shape)
-
 from sklearn.svm import LinearSVC
 from sklearn.metrics import accuracy_score, classification_report
 
-svm_model = LinearSVC()
-svm_model.fit(X_train_tfidf, y_train)
 
-y_pred = svm_model.predict(X_test_tfidf)
+def load_data():
+    fake_df = pd.read_csv("data/news_dataset/Fake.csv")
+    true_df = pd.read_csv("data/news_dataset/True.csv")
 
-accuracy = accuracy_score(y_test, y_pred)
+    fake_df["label"] = 0
+    true_df["label"] = 1
 
-print(f"Accuracy: {accuracy:.4f}")
+    return pd.concat([fake_df, true_df], ignore_index=True)
 
-print("\nClassification Report:")
-print(classification_report(y_test, y_pred))
 
-sample_text = """
-Scientists have discovered a new renewable energy source that could reduce global emissions by 40 percent over the next decade.
-"""
+def preprocess_data(df):
+    df["title"] = df["title"].fillna("")
+    df["text"] = df["text"].fillna("")
 
-sample_vector = vectorizer.transform([sample_text])
+    df["content"] = df["title"] + " " + df["text"]
 
-prediction = svm_model.predict(sample_vector)
+    return df
 
-print("Prediction:", prediction)
 
-import joblib
-joblib.dump(svm_model, "models/svm_model.pkl")
-joblib.dump(vectorizer, "models/tfidf_vectorizer.pkl")
+def split_data(df):
+    X = df["content"]
+    y = df["label"]
 
-print("Model saved successfully!")
+    return train_test_split(
+        X,
+        y,
+        test_size=0.2,
+        random_state=42,
+        stratify=y
+    )
+
+
+def vectorize_data(X_train, X_test):
+    vectorizer = TfidfVectorizer(
+        stop_words="english",
+        max_features=20000
+    )
+
+    X_train_tfidf = vectorizer.fit_transform(X_train)
+    X_test_tfidf = vectorizer.transform(X_test)
+
+    return vectorizer, X_train_tfidf, X_test_tfidf
+
+
+def train_model(X_train_tfidf, y_train):
+    model = LinearSVC()
+
+    model.fit(X_train_tfidf, y_train)
+
+    return model
+
+
+def evaluate_model(model, X_test_tfidf, y_test):
+    predictions = model.predict(X_test_tfidf)
+
+    accuracy = accuracy_score(y_test, predictions)
+
+    print(f"\nAccuracy: {accuracy:.4f}")
+
+    print("\nClassification Report:")
+    print(classification_report(y_test, predictions))
+
+
+def save_artifacts(model, vectorizer):
+    joblib.dump(model, "models/svm_model.pkl")
+    joblib.dump(vectorizer, "models/tfidf_vectorizer.pkl")
+
+    print("\nArtifacts saved successfully.")
+
+
+def main():
+    print("Loading dataset...")
+
+    df = load_data()
+
+    print(f"Dataset Shape: {df.shape}")
+
+    df = preprocess_data(df)
+
+    X_train, X_test, y_train, y_test = split_data(df)
+
+    vectorizer, X_train_tfidf, X_test_tfidf = vectorize_data(
+        X_train,
+        X_test
+    )
+
+    model = train_model(
+        X_train_tfidf,
+        y_train
+    )
+
+    evaluate_model(
+        model,
+        X_test_tfidf,
+        y_test
+    )
+
+    save_artifacts(
+        model,
+        vectorizer
+    )
+
+
+if __name__ == "__main__":
+    main()
