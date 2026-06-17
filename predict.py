@@ -2,6 +2,7 @@ import joblib
 import numpy as np
 from utils.emotion import get_emotion_score
 from utils.clickbait import get_clickbait_score
+from utils.evidence import get_evidence_score
 
 model = joblib.load("models/svm_model.pkl")
 vectorizer = joblib.load("models/tfidf_vectorizer.pkl")
@@ -25,12 +26,14 @@ def analyze_text(text):
 
     emotion_score = get_emotion_score(text)
     clickbait_score = get_clickbait_score(text)
+    evidence_score = get_evidence_score(text)
 
     return {
         "assessment": assessment,
         "confidence": round(confidence, 2),
         "emotion": emotion_score,
         "clickbait_score": clickbait_score,
+        "evidence_score": evidence_score
     }
 
 
