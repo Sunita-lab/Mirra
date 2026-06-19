@@ -19,53 +19,77 @@ def analyze_with_gemini(text, local_results):
     prompt = f"""
 You are Mirra, an AI trust analysis assistant.
 
+Your task is to analyze the text and explain the results of Mirra's trust signals.
+
 TEXT:
 {text}
 
 LOCAL ANALYSIS RESULTS:
 {local_results}
 
-Tasks:
+METRIC DEFINITIONS:
 
-1. Explain the local analysis results.
-2. Detect whether the text contains a factual claim.
+Credibility Confidence:
+Represents how confident the ML model is in its prediction.
+It does NOT represent truthfulness.
+
+Emotion Score:
+Measures emotional intensity in language.
+Higher scores indicate more emotionally charged wording.
+
+Clickbait Score:
+Measures presence of sensational or attention-grabbing language.
+Higher scores indicate stronger clickbait patterns.
+
+Evidence Score:
+Measures presence of evidence indicators such as:
+study, report, research, survey, data, according to.
+Higher scores indicate stronger evidence signals.
+
+TASKS:
+
+1. Determine whether the text contains a factual claim.
+2. Determine whether verification is recommended.
 3. Estimate cherry-picking risk (0-100).
-4. Decide whether verification is needed.
-5. Explain your reasoning.
+4. Create a short user-friendly summary.
+5. Create a detailed analysis using the provided signals.
 
 Return ONLY valid JSON.
 
 Required format:
 
 {{
-    "claim_detected": true,
-    "cherry_picking_risk": 0,
-    "cherry_picking_reason": "",
-    "verification_needed": false,
+  "summary": "",
 
-    "signal_explanation": {{
-        "credibility": "",
-        "emotion": "",
-        "clickbait": "",
-        "evidence": ""
-    }}
+  "claim_detected": true,
+
+  "verification_needed": false,
+
+  "cherry_picking_risk": 0,
+
+  "sections": {{
+      "claim_detection": "",
+      "evidence_analysis": "",
+      "clickbait_analysis": "",
+      "cherry_picking_analysis": "",
+      "verification_recommendation": ""
+  }}
 }}
 
 Rules:
-- Do NOT invent scores.
-- Use the provided local analysis values.
-- cherry_picking_risk must be an integer between 0 and 100.
-- claim_detected must be true only if a factual claim is present.
-- verification_needed should be true if the claim can be checked against evidence or authoritative sources.
-- Keep explanations short and clear (1-2 sentences).
-- Return ONLY valid JSON.
+
+- summary must be 2-3 sentences.
+- Use the local analysis values.
+- Do not invent scores.
+- cherry_picking_risk must be between 0 and 100.
+- Keep section explanations concise.
+- Return ONLY JSON.
 """
 
     response = model.generate_content(prompt)
 
     raw_text = response.text.strip()
 
-    # Remove markdown code fences if Gemini adds them
     raw_text = re.sub(r"^```json", "", raw_text)
     raw_text = re.sub(r"^```", "", raw_text)
     raw_text = re.sub(r"```$", "", raw_text)
@@ -77,18 +101,22 @@ Rules:
 
     except Exception:
         return {
+            "summary": "Failed to generate analysis.",
+
             "claim_detected": None,
-            "cherry_picking_risk": None,
-            "cherry_picking_reason": "Failed to parse Gemini response.",
+
             "verification_needed": None,
-            "signal_explanation": {
-                "credibility": "",
-                "emotion": "",
-                "clickbait": "",
-                "evidence": ""
+
+            "cherry_picking_risk": None,
+
+            "sections": {
+                "claim_detection": "",
+                "evidence_analysis": "",
+                "clickbait_analysis": "",
+                "cherry_picking_analysis": "",
+                "verification_recommendation": ""
             }
         }
-
 if __name__ == "__main__":
 
     sample_text = """
@@ -108,4 +136,4 @@ if __name__ == "__main__":
         local_results
     )
 
-    print(result)
+    print(json.dumps(result, indent=4))
