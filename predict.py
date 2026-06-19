@@ -1,15 +1,17 @@
 import joblib
 import numpy as np
+
 from utils.emotion import get_emotion_score
 from utils.clickbait import get_clickbait_score
 from utils.evidence import get_evidence_score
-from utils.claim_detector import detect_claims
+from utils.gemini_analyzer import analyze_with_gemini
 
 model = joblib.load("models/svm_model.pkl")
 vectorizer = joblib.load("models/tfidf_vectorizer.pkl")
 
 
 def analyze_text(text):
+
     text_vector = vectorizer.transform([text])
 
     prediction = model.predict(text_vector)
@@ -25,23 +27,35 @@ def analyze_text(text):
         else "Potentially Misleading"
     )
 
-    emotion_score = get_emotion_score(text)
-    clickbait_score = get_clickbait_score(text)
-    evidence_score = get_evidence_score(text)
-    claim_info = detect_claims(text)
+    # ------------------------
+    # Local Analysis
+    # ------------------------
 
-    return {
+    local_results = {
         "assessment": assessment,
         "confidence": round(confidence, 2),
-        "emotion": emotion_score,
-        "clickbait_score": clickbait_score,
-        "evidence_score": evidence_score,
-        "claim_info": claim_info["claim_detected"],
-        "claim_types": claim_info["claim_types"],
+        "emotion_score": get_emotion_score(text),
+        "clickbait_score": get_clickbait_score(text),
+        "evidence_score": get_evidence_score(text)
+    }
+
+    # ------------------------
+    # Gemini Analysis
+    # ------------------------
+
+    ai_results = analyze_with_gemini(
+        text,
+        local_results
+    )
+
+    return {
+        "local_analysis": local_results,
+        "ai_analysis": ai_results
     }
 
 
 if __name__ == "__main__":
+
     sample_text = """
     Scientists have discovered a new renewable energy source that could reduce global emissions by 40 percent over the next decade.
     """
