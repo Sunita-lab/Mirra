@@ -271,3 +271,32 @@ if st.button("🔍 Analyze Content", use_container_width=True):
         - Estimated by Mirra's Gemini reasoning layer.
         - Higher values suggest a greater risk of missing context or selective presentation.
         """)
+
+    # -------------------------
+    # Known Limitations
+    # -------------------------
+
+    with st.expander("⚠️ Known Limitations"):
+
+        st.markdown("""
+    Mirra is a **Trust Analysis Assistant**, not a fact-checking system.
+
+    Current limitations:
+
+    - The machine learning model was trained primarily on news-oriented text data.
+
+    - Short factual statements may be classified as **Uncertain** because they provide limited contextual signals.
+
+    - Mirra evaluates trust signals rather than determining absolute truth.
+
+    - Evidence analysis is based on textual evidence indicators and does not independently verify sources.
+
+    - Cherry-picking estimates are heuristic and should be interpreted as guidance rather than definitive judgments.
+
+    - AI-generated reasoning may occasionally produce imperfect interpretations.
+
+    - Users should consult original sources when making important decisions.
+    """)
+
+
+
