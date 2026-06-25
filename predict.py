@@ -21,11 +21,16 @@ def analyze_text(text):
     confidence = 1 / (1 + np.exp(-abs(decision_score[0])))
     confidence = confidence * 100
 
-    assessment = (
-        "Likely Reliable"
-        if prediction[0] == 1
-        else "Potentially Misleading"
-    )
+    confidence = round(confidence, 2)
+
+    if confidence < 60:
+        assessment = "Uncertain"
+
+    elif prediction[0] == 1:
+        assessment = "Likely Reliable"
+
+    else:
+        assessment = "Potentially Misleading"
 
     # ------------------------
     # Local Analysis
@@ -33,7 +38,7 @@ def analyze_text(text):
 
     local_results = {
         "assessment": assessment,
-        "confidence": round(confidence, 2),
+        "confidence": confidence,
         "emotion_score": get_emotion_score(text),
         "clickbait_score": get_clickbait_score(text),
         "evidence_score": get_evidence_score(text)
