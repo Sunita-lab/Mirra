@@ -1,4 +1,9 @@
-import streamlit as st
+import os
+try:
+    import streamlit as st
+    api_ley = st.secrets["GEMINI_API_KEY"]
+except Exception:
+    api_ley = os.getenv("GEMINI_API_KEY")
 from predict import analyze_text
 
 # --------------------------------------------------
